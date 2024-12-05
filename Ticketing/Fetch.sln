@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.35527.113 d17.12
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fetch.Api", "Ticketing.Api\Fetch.Api.csproj", "{2C4EB8FD-417D-440D-86EE-39B0F1CDA607}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fetch.Models", "Ticketing.Models\Fetch.Models.csproj", "{EE69BD43-54F1-470C-934F-100372B97DD0}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2C4EB8FD-417D-440D-86EE-39B0F1CDA607}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2C4EB8FD-417D-440D-86EE-39B0F1CDA607}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2C4EB8FD-417D-440D-86EE-39B0F1CDA607}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2C4EB8FD-417D-440D-86EE-39B0F1CDA607}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EE69BD43-54F1-470C-934F-100372B97DD0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EE69BD43-54F1-470C-934F-100372B97DD0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EE69BD43-54F1-470C-934F-100372B97DD0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EE69BD43-54F1-470C-934F-100372B97DD0}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
