@@ -1,5 +1,6 @@
 ﻿using Fetch.Api.Logic;
 using Fetch.Models.Request;
+using Fetch.Models.Response;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Fetch.Api.Controllers
@@ -17,6 +18,8 @@ namespace Fetch.Api.Controllers
 
         [Route("New")]
         [HttpPost]
+        [ProducesResponseType(201)]
+        [ProducesResponseType(400)]
         public IActionResult CreateNewRequest([FromBody] NewRequest newRequest)
         {
             if(newRequest == null || newRequest.Request == null)
@@ -30,14 +33,17 @@ namespace Fetch.Api.Controllers
 
         [Route("")]
         [HttpGet]
+        [ProducesResponseType(200, Type = typeof(LoadAllRequestsResponse))]
         public IActionResult GetAllRequests()
         {
             var requests = _requestService.GetAllRequests();
-            return Json(requests);
+            return Json(new LoadAllRequestsResponse() { Requests = requests});
         }
 
         [Route("{id}")]
         [HttpGet]
+        [ProducesResponseType(200, Type= typeof(LoadSingleRequestResponse))]
+        [ProducesResponseType(404)]
         public IActionResult GetRequest([FromRoute] int id)
         {
             var result = _requestService.GetRequest(id);
@@ -47,11 +53,13 @@ namespace Fetch.Api.Controllers
                 return NotFound($"Request with ID {id} was not found.");
             }
 
-            return Json(result);
+            return Json(new LoadSingleRequestResponse() { Request = result});
         }
 
         [Route("{id}/delete")]
         [HttpDelete]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(404)]
         public IActionResult DeleteRequest([FromRoute] int id)
         {
             var result = _requestService.DeleteRequest(id);

@@ -4,6 +4,6 @@ namespace Fetch.Models.Response
 {
     public class LoadSingleRequestResponse
     {
-        public BaseRequest Requests { get; set; }
+        public BaseRequest Request { get; set; }
     }
 }
