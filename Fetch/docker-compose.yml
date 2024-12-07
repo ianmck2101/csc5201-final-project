@@ -1,0 +1,26 @@
+services:
+  fetch-api:
+    build:
+      context: .
+      dockerfile: Fetch.Api/Dockerfile
+    ports:
+      - "8080:80" # Map port 80 in the container to port 8080 on the host
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - POSTGRES_HOST=database
+      - POSTGRES_DB=fetchdb
+      - POSTGRES_USER=fetchuser
+      - POSTGRES_PASSWORD=fetchpassword
+      - ASPNETCORE_URLS=http://*:80/;
+    depends_on:
+      - database
+
+  database:
+    image: postgres:15
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: fetchdb
+      POSTGRES_USER: fetchuser
+      POSTGRES_PASSWORD: fetchpassword
