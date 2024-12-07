@@ -7,11 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Npgsql" Version="8.0.6" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Ticketing.Models\Fetch.Models.csproj" />
+    <ProjectReference Include="..\Fetch.Models\Fetch.Models.csproj" />
   </ItemGroup>
 
 </Project>
