@@ -6,7 +6,7 @@ namespace Fetch.Api.Data
     public interface IRequestDAL
     {
         public void EnsureTablesExist();
-        public void CreateNewRequest(BaseRequest request);
+        public int CreateNewRequest(BaseRequest request);
         public bool DeleteRequest(int id);
         public BaseRequest? GetRequest(int id);
         public IEnumerable<BaseRequest> GetAllRequests();
@@ -33,27 +33,33 @@ namespace Fetch.Api.Data
                     title VARCHAR(255) NOT NULL,
                     description TEXT NOT NULL,
                     price DECIMAL NOT NULL,
-                    due_date TIMESTAMP NOT NULL
+                    due_date TIMESTAMP NOT NULL, 
+                    category INT NOT NULL
                 );";
 
             using var command = new NpgsqlCommand(checkTableQuery, connection);
             command.ExecuteNonQuery();
         }
 
-        public void CreateNewRequest(BaseRequest request)
+        public int CreateNewRequest(BaseRequest request)
         {
             using var connection = new NpgsqlConnection(_connectionString);
             connection.Open();
 
-            var query = "INSERT INTO requests (title, description, price, due_date) VALUES (@title, @description, @price, @due_date)";
+            var query = "INSERT INTO requests (title, description, price, due_date, category) VALUES (@title, @description, @price, @due_date, @category) RETURNING id;";
             using var command = new NpgsqlCommand(query, connection);
             command.Parameters.AddWithValue("@title", request.Title);
             command.Parameters.AddWithValue("@description", request.Description);
             command.Parameters.AddWithValue("@price", request.Price);
             command.Parameters.AddWithValue("@due_date", request.DueDate);
+            command.Parameters.AddWithValue("@category", (byte)request.Category);
 
-            command.ExecuteNonQuery();
+#pragma warning disable CS8605 // Unboxing a possibly null value.
+            var newRequestId = (int)command.ExecuteScalar();
+#pragma warning restore CS8605 // Unboxing a possibly null value.
+            return newRequestId;
         }
+
 
         public bool DeleteRequest(int id)
         {
@@ -73,7 +79,7 @@ namespace Fetch.Api.Data
             using var connection = new NpgsqlConnection(_connectionString);
             connection.Open();
 
-            var query = "SELECT id, title, description, price, due_date FROM requests WHERE id = @id";
+            var query = "SELECT id, title, description, price, due_date, category FROM requests WHERE id = @id";
             using var command = new NpgsqlCommand(query, connection);
             command.Parameters.AddWithValue("@id", id);
 
@@ -86,7 +92,8 @@ namespace Fetch.Api.Data
                     Title = reader.GetString(1),
                     Description = reader.GetString(2),
                     Price = reader.GetDecimal(3),
-                    DueDate = (DateTimeOffset)reader.GetDateTime(4)
+                    DueDate = (DateTimeOffset)reader.GetDateTime(4),
+                    Category = (ServiceCategories)reader.GetInt32(5)
                 };
             }
 
@@ -98,7 +105,7 @@ namespace Fetch.Api.Data
             using var connection = new NpgsqlConnection(_connectionString);
             connection.Open();
 
-            var query = "SELECT id, title, description, price, due_date FROM requests";
+            var query = "SELECT id, title, description, price, due_date, category FROM requests";
             using var command = new NpgsqlCommand(query, connection);
 
             using var reader = command.ExecuteReader();
@@ -112,7 +119,8 @@ namespace Fetch.Api.Data
                     Title = reader.GetString(1),
                     Description = reader.GetString(2),
                     Price = reader.GetDecimal(3),
-                    DueDate = (DateTimeOffset)reader.GetDateTime(4)
+                    DueDate = (DateTimeOffset)reader.GetDateTime(4),
+                    Category = (ServiceCategories)reader.GetInt32(5)
                 });
             }
 
