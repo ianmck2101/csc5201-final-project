@@ -6,7 +6,8 @@ using Fetch.Models.Events;
 public class MessageConsumer
 {
     private const string KafkaBootstrapServers = "localhost:9092";
-    private const string Topic = "requests";
+    private const string NewRequestTopic = "requests";
+    private const string UpdateRequestTopic = "update-request";
     private const int MaxRetryAttempts = 3;
     private const int RetryDelaySeconds = 5;
 
@@ -37,7 +38,7 @@ public class MessageConsumer
 
                 using (var consumer = new ConsumerBuilder<Ignore, string>(config).Build())
                 {
-                    consumer.Subscribe(Topic);
+                    consumer.Subscribe(new[] { NewRequestTopic, UpdateRequestTopic });
 
                     while (!cancellationToken.IsCancellationRequested)
                     {
@@ -47,7 +48,14 @@ public class MessageConsumer
                             if (consumeResult != null)
                             {
                                 Console.WriteLine($"Received message: {consumeResult.Message.Value}");
-                                await ProcessNewRequest(consumeResult.Message.Value);
+                                if (consumeResult.Topic == "requests")
+                                {
+                                    await ProcessNewRequest(consumeResult.Message.Value);
+                                }
+                                else if (consumeResult.Topic == "request-updates")
+                                {
+                                    await ProcessRequestUpdate(consumeResult.Message.Value);
+                                }
                             }
                         }
                         catch (ConsumeException ex)
@@ -94,6 +102,11 @@ public class MessageConsumer
             Console.WriteLine($"Assigning job to provider {provider.Name}");
             await AssignJobToProvider(provider, newRequest);
         }
+    }
+
+    private async Task ProcessRequestUpdate(string value)
+    {
+        throw new NotImplementedException();
     }
 
     private async Task AssignJobToProvider(Provider provider, RequestCreated newRequest)

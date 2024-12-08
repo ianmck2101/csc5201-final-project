@@ -36,6 +36,7 @@ services:
       - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
       - KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092
       - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_CREATE_TOPICS=requests:1:1,request-updates:1:1
       - KAFKA_BROKER_ID=1
     ports:
       - "9092:9092"
