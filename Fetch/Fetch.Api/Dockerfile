@@ -4,11 +4,13 @@ WORKDIR /app
 COPY *.sln ./
 COPY Fetch.Api/*.csproj ./Fetch.Api/
 COPY Fetch.Models/*.csproj ./Fetch.Models/
+COPY Fetch.Consumer/*.csproj ./Fetch.Consumer/
 
 RUN dotnet restore
 
 COPY Fetch.Api/. ./Fetch.Api/
 COPY Fetch.Models/. ./Fetch.Models/
+COPY Fetch.Consumer/. ./Fetch.Consumer/
 
 WORKDIR /app/Fetch.Api
 RUN dotnet publish -c Release -o /publish

@@ -1,5 +1,7 @@
-﻿using Fetch.Api.Data;
+﻿using System.Text.Json;
+using Fetch.Api.Data;
 using Fetch.Models.Data;
+using Fetch.Models.Events;
 
 namespace Fetch.Api.Logic
 {
@@ -14,16 +16,28 @@ namespace Fetch.Api.Logic
     public class RequestService : IRequestService
     {
         private readonly IRequestDAL _dal;
+        private readonly IKafkaProducer _kafkaProducer;
 
-        public RequestService(IRequestDAL requestDAL)
+        public RequestService(IRequestDAL requestDAL, IKafkaProducer kafkaProducer)
         {
             _dal = requestDAL ?? throw new ArgumentNullException(nameof(requestDAL));
+            _kafkaProducer = kafkaProducer ?? throw new ArgumentNullException(nameof(kafkaProducer));
+
             _dal.EnsureTablesExist();
         }
 
         public void CreateNewRequest(BaseRequest request)
         {
             _dal.CreateNewRequest(request);
+
+            var requestCreatedEvent = new RequestCreated()
+            {
+                Title = request.Title,
+                Description = request.Description,
+                Price = request.Price,
+            };
+
+            _kafkaProducer.ProduceMessageAsync(JsonSerializer.Serialize(requestCreatedEvent));
         }
 
         public bool DeleteRequest(int id)

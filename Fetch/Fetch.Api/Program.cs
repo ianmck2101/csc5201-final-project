@@ -1,3 +1,4 @@
+using Fetch.Api;
 using Fetch.Api.Data;
 using Fetch.Api.Logic;
 
@@ -10,7 +11,8 @@ builder.Services.AddSwaggerGen();
 
 //Services
 builder.Services.AddTransient<IRequestService, RequestService>();
-builder.Services.AddTransient<IRequestDAL, RequestDAL>();
+builder.Services.AddSingleton<IRequestDAL, RequestDAL>();
+builder.Services.AddSingleton<IKafkaProducer, KafkaProducer>();
 
 var app = builder.Build();
 
