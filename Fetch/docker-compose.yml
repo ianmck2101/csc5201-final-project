@@ -1,4 +1,16 @@
 services:
+  fetch-ui:
+    build:
+      context: ./Fetch.Ui
+    ports:
+      - "8081:80"
+    networks:
+      fetch-network:
+        aliases:
+          - fetch-ui
+    depends_on:
+      - fetch-api
+
   fetch-api:
     build:
       context: .
