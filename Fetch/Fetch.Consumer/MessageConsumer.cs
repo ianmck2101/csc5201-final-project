@@ -11,17 +11,19 @@ public class MessageConsumer
     private const int MaxRetryAttempts = 3;
     private const int RetryDelaySeconds = 5;
 
-    private readonly IConsumerDAL _providerDal;
+    private readonly IConsumerDAL _consumerDal;
 
-    public MessageConsumer(IConsumerDAL providerDal)
+    public MessageConsumer(IConsumerDAL consumerDal)
     {
-        _providerDal = providerDal ?? throw new ArgumentNullException(nameof(providerDal));
+        _consumerDal = consumerDal ?? throw new ArgumentNullException(nameof(consumerDal));
 
-        _providerDal.EnsureTablesExist();
+        _consumerDal.EnsureTablesExist();
     }
 
     public async Task StartListening(CancellationToken cancellationToken)
     {
+        Thread.Sleep(5000);
+
         var config = new ConsumerConfig
         {
             BootstrapServers = KafkaBootstrapServers,
@@ -46,8 +48,7 @@ public class MessageConsumer
                     {
                         try
                         {
-                            Console.WriteLine("Polling Kafka for messages...");
-                            var consumeResult = consumer.Consume(TimeSpan.FromMilliseconds(1000));
+                            var consumeResult = consumer.Consume(TimeSpan.FromMilliseconds(100));
 
                             if (consumeResult != null && consumeResult.Message != null)
                             {
@@ -104,7 +105,7 @@ public class MessageConsumer
             return;
         }
 
-        var providers = await _providerDal.LoadAllProviders();
+        var providers = await _consumerDal.LoadAllProviders();
 
         // Assign the job to providers (e.g., send notifications, create bids, etc.)
         foreach (var provider in providers)
@@ -115,9 +116,28 @@ public class MessageConsumer
 
     private async Task ProcessRequestUpdate(string value)
     {
-        Console.WriteLine(value + "would be processed");
+        var updateRequest = JsonSerializer.Deserialize<RequestUpdated>(value);
 
-        await Task.Delay(500);
+        if(updateRequest == null)
+        {
+            Console.WriteLine("Request: " + value + " could not be processed/deserialized.");
+        }
+
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
+        switch (updateRequest.NewStatus)
+        {
+            case Status.Accepted:
+                await _consumerDal.ProcessAcceptedRequest(updateRequest);
+                break;
+            case Status.Closed:
+                await _consumerDal.ProcessClosedRequest(updateRequest);
+                break;
+            default:
+                Console.WriteLine("Status: " + updateRequest.NewStatus + "Cannot be processed");
+                break;
+        }
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
+
         return;
     }
 
@@ -127,12 +147,14 @@ public class MessageConsumer
         {
             var association = new ProviderRequestAssociation
             {
+                Title = newRequest.Title,
                 Description = newRequest.Description,
                 Status = (byte)Status.Open,
-                ProviderId = provider.Id
+                ProviderId = provider.Id,
+                RequestId = newRequest.Id,
             };
 
-            await _providerDal.AddProviderRequestAssociation(association);
+            await _consumerDal.AddProviderRequestAssociation(association);
 
             Console.WriteLine($"Provider {provider.Name} is now bidding on the job: {JsonSerializer.Serialize(newRequest)}");
         }

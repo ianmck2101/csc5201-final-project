@@ -11,7 +11,10 @@ namespace Fetch.Api.Logic
         bool DeleteRequest(int id);
         BaseRequest? GetRequest(int id);
         IEnumerable<BaseRequest> GetAllRequests();
+        bool AcceptRequest(int id, int providerId);
+        bool CancelRequest(int id);
     }
+
 
     public class RequestService : IRequestService
     {
@@ -28,10 +31,11 @@ namespace Fetch.Api.Logic
 
         public void CreateNewRequest(BaseRequest request)
         {
-            _dal.CreateNewRequest(request);
+            var newId = _dal.CreateNewRequest(request);
 
             var requestCreatedEvent = new RequestCreated()
             {
+                Id = newId,
                 Title = request.Title,
                 Description = request.Description,
                 Price = request.Price,
@@ -43,6 +47,14 @@ namespace Fetch.Api.Logic
 
         public bool DeleteRequest(int id)
         {
+            var updateRequestEvent = new RequestUpdated()
+            {
+                RequestId = id,
+                NewStatus = Status.Closed
+            };
+
+            _kafkaProducer.ProduceRequestUpdatedMessageAsync(JsonSerializer.Serialize(updateRequestEvent));
+
             return _dal.DeleteRequest(id);
         }
 
@@ -54,6 +66,47 @@ namespace Fetch.Api.Logic
         public BaseRequest? GetRequest(int id)
         {
             return _dal.GetRequest(id);
+        }
+
+        public bool AcceptRequest(int requestId, int providerId)
+        {
+            var request = _dal.GetRequest(requestId);
+
+            if (request == null)
+            {
+                return false;
+            }
+
+            var updateRequestEvent = new RequestUpdated()
+            {
+                RequestId = request.Id,
+                NewStatus = Status.Accepted, 
+                ProviderId = providerId
+            };
+
+            _kafkaProducer.ProduceRequestUpdatedMessageAsync(JsonSerializer.Serialize(updateRequestEvent));
+
+            return true;
+        }
+
+        public bool CancelRequest(int id)
+        {
+            var request = _dal.GetRequest(id);
+
+            if (request == null)
+            {
+                return false;
+            }
+
+            var updateRequestEvent = new RequestUpdated()
+            {
+                RequestId = request.Id,
+                NewStatus = Status.Closed
+            };
+
+            _kafkaProducer.ProduceRequestUpdatedMessageAsync(JsonSerializer.Serialize(updateRequestEvent));
+
+            return true;
         }
     }
 }

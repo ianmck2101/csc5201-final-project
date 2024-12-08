@@ -71,5 +71,37 @@ namespace Fetch.Api.Controllers
 
             return Ok($"Request with ID {id} has been deleted.");
         }
+
+        [Route("{id}/commands/accept/{providerId}")]
+        [HttpPost]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(404)]
+        public IActionResult AcceptRequest([FromRoute] int id, [FromRoute] int providerId)
+        {
+            var result = _requestService.AcceptRequest(id, providerId);
+
+            if(!result)
+            {
+                return NotFound();
+            }
+
+            return Ok();
+        }
+
+        [Route("{id}/commands/cancel")]
+        [HttpPost]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(404)]
+        public IActionResult CancelRequest([FromRoute] int id)
+        {
+            var result = _requestService.CancelRequest(id);
+
+            if (!result)
+            {
+                return NotFound();
+            }
+
+            return Ok();
+        }
     }
 }
