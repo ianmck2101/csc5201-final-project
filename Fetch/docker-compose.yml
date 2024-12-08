@@ -6,7 +6,9 @@ services:
     ports:
       - "8080:80"
     networks:
-      - fetch-network
+      fetch-network:
+        aliases:
+          - fetch-api
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - POSTGRES_HOST=database
@@ -22,7 +24,9 @@ services:
     image: postgres:15
     container_name: postgres
     networks:
-      - fetch-network
+      fetch-network:
+        aliases:
+          - database
     ports:
       - "5432:5432"
     environment:
@@ -36,12 +40,13 @@ services:
       - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
       - KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092
       - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
-      - KAFKA_CREATE_TOPICS=requests:1:1,request-updates:1:1
       - KAFKA_BROKER_ID=1
     ports:
       - "9092:9092"
     networks:
-      - fetch-network
+      fetch-network:
+        aliases:
+          - kafka
     depends_on:
       - zookeeper
 
@@ -51,7 +56,9 @@ services:
     ports:
       - "2181:2181"
     networks:
-      - fetch-network
+      fetch-network:
+        aliases:
+          - zookeeper
 
   request-consumer:
     build:
@@ -61,7 +68,9 @@ services:
       - kafka
       - fetch-api
     networks:
-      - fetch-network
+      fetch-network:
+        aliases:
+          - request-consumer
     command: ["dotnet", "Fetch.Consumer.dll"]
 
 networks:

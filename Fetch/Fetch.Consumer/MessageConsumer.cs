@@ -5,8 +5,8 @@ using Fetch.Models.Data;
 using Fetch.Models.Events;
 public class MessageConsumer
 {
-    private const string KafkaBootstrapServers = "localhost:9092";
-    private const string NewRequestTopic = "requests";
+    private const string KafkaBootstrapServers = "kafka:9092";
+    private const string NewRequestsTopic = "requests";
     private const string UpdateRequestTopic = "update-request";
     private const int MaxRetryAttempts = 3;
     private const int RetryDelaySeconds = 5;
@@ -16,6 +16,8 @@ public class MessageConsumer
     public MessageConsumer(IConsumerDAL providerDal)
     {
         _providerDal = providerDal ?? throw new ArgumentNullException(nameof(providerDal));
+
+        _providerDal.EnsureTablesExist();
     }
 
     public async Task StartListening(CancellationToken cancellationToken)
@@ -38,21 +40,24 @@ public class MessageConsumer
 
                 using (var consumer = new ConsumerBuilder<Ignore, string>(config).Build())
                 {
-                    consumer.Subscribe(new[] { NewRequestTopic, UpdateRequestTopic });
+                    consumer.Subscribe(new[] { NewRequestsTopic, UpdateRequestTopic });
 
                     while (!cancellationToken.IsCancellationRequested)
                     {
                         try
                         {
+                            Console.WriteLine("Polling Kafka for messages...");
                             var consumeResult = consumer.Consume(TimeSpan.FromMilliseconds(1000));
-                            if (consumeResult != null)
+
+                            if (consumeResult != null && consumeResult.Message != null)
                             {
-                                Console.WriteLine($"Received message: {consumeResult.Message.Value}");
-                                if (consumeResult.Topic == "requests")
+                                Console.WriteLine($"Received message from topic {consumeResult.Topic}: {consumeResult.Message.Value}");
+
+                                if (consumeResult.Topic.Equals(NewRequestsTopic))
                                 {
                                     await ProcessNewRequest(consumeResult.Message.Value);
                                 }
-                                else if (consumeResult.Topic == "request-updates")
+                                else if (consumeResult.Topic.Equals(UpdateRequestTopic))
                                 {
                                     await ProcessRequestUpdate(consumeResult.Message.Value);
                                 }
@@ -61,6 +66,11 @@ public class MessageConsumer
                         catch (ConsumeException ex)
                         {
                             Console.WriteLine($"Consume error: {ex.Error.Reason}");
+                        }
+                        catch (Exception ex)
+                        {
+                            // Catch any other exceptions to prevent consumer from crashing
+                            Console.WriteLine($"Unexpected error: {ex.Message}");
                         }
                     }
                 }
@@ -99,14 +109,16 @@ public class MessageConsumer
         // Assign the job to providers (e.g., send notifications, create bids, etc.)
         foreach (var provider in providers)
         {
-            Console.WriteLine($"Assigning job to provider {provider.Name}");
             await AssignJobToProvider(provider, newRequest);
         }
     }
 
     private async Task ProcessRequestUpdate(string value)
     {
-        throw new NotImplementedException();
+        Console.WriteLine(value + "would be processed");
+
+        await Task.Delay(500);
+        return;
     }
 
     private async Task AssignJobToProvider(Provider provider, RequestCreated newRequest)

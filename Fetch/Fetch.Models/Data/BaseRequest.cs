@@ -7,5 +7,6 @@
         public string Description { get; set; }
         public decimal Price { get; set; }
         public DateTimeOffset DueDate { get; set; }
+        public ServiceCategories Category { get; set; }
     }
 }

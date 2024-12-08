@@ -6,7 +6,6 @@ namespace Fetch.Consumer
     public interface IConsumerDAL
     {
         void EnsureTablesExist();
-
         Task<IEnumerable<Provider>> LoadAllProviders();
         Task<IEnumerable<ProviderRequestAssociation>> LoadRequestsForProvider(int providerId);
         Task AddProviderRequestAssociation(ProviderRequestAssociation association);
@@ -50,6 +49,16 @@ namespace Fetch.Consumer
 
             using var providerRequestAssociationsCommand = new NpgsqlCommand(providerRequestAssociationsTableQuery, connection);
             providerRequestAssociationsCommand.ExecuteNonQuery();
+
+            var insertProvidersQuery = @"
+                INSERT INTO providers (name, email, provider_categories)
+                VALUES
+                    ('ProviderA', 'providera@example.com', ARRAY[0]),
+                    ('ProviderB', 'providerb@example.com', ARRAY[0, 1]),
+                    ('ProviderC', 'providerc@example.com', ARRAY[1])
+                ON CONFLICT DO NOTHING;";
+            using var insertCommand = new NpgsqlCommand(insertProvidersQuery, connection);
+            insertCommand.ExecuteNonQuery();
         }
 
         public async Task<IEnumerable<Provider>> LoadAllProviders()
@@ -65,12 +74,15 @@ namespace Fetch.Consumer
 
             while (await reader.ReadAsync())
             {
+                var categoriesArray = reader.GetFieldValue<int[]>(3);
+                var categories = categoriesArray.Select(c => (ServiceCategories)c).ToArray();
+
                 providers.Add(new Provider()
                 {
                     Id = reader.GetInt32(0),
                     Name = reader.GetString(1),
                     Email = reader.GetString(2),
-                    Categories = reader.GetFieldValue<ServiceCategories[]>(3)
+                    Categories = categories
                 });
             }
 

@@ -4,15 +4,15 @@ namespace Fetch.Api
 {
     public interface IKafkaProducer
     {
-        Task ProduceMessageAsync(string message);
+        Task ProduceNewRequestMessageAsync(string message);
     }
 
     public class KafkaProducer : IKafkaProducer
     {
         private const string KafkaBootstrapServers = "kafka:9092";
-        private const string Topic = "requests";
+        private const string NewRequestsTopic = "requests";
 
-        public async Task ProduceMessageAsync(string message)
+        public async Task ProduceNewRequestMessageAsync(string message)
         {
             var config = new ProducerConfig
             {
@@ -23,7 +23,7 @@ namespace Fetch.Api
             {
                 try
                 {
-                    var result = await producer.ProduceAsync(Topic, new Message<Null, string> { Value = message });
+                    var result = await producer.ProduceAsync(NewRequestsTopic, new Message<Null, string> { Value = message });
                     Console.WriteLine($"Message '{message}' sent to {result.TopicPartitionOffset}");
                 }
                 catch (ProduceException<Null, string> ex)

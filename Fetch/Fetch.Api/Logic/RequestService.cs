@@ -35,9 +35,10 @@ namespace Fetch.Api.Logic
                 Title = request.Title,
                 Description = request.Description,
                 Price = request.Price,
+                Category = request.Category,
             };
 
-            _kafkaProducer.ProduceMessageAsync(JsonSerializer.Serialize(requestCreatedEvent));
+            _kafkaProducer.ProduceNewRequestMessageAsync(JsonSerializer.Serialize(requestCreatedEvent));
         }
 
         public bool DeleteRequest(int id)
