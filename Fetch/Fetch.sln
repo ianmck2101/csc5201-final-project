@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fetch.Api", "Fetch.Api\Fetc
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fetch.Models", "Fetch.Models\Fetch.Models.csproj", "{EE69BD43-54F1-470C-934F-100372B97DD0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fetch.Consumer", "Fetch.Consumer\Fetch.Consumer.csproj", "{2C1B3A16-FE8F-4193-9B01-EE1BA2DFF946}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fetch.Consumer.OLD", "Fetch.Consumer\Fetch.Consumer.OLD.csproj", "{2C1B3A16-FE8F-4193-9B01-EE1BA2DFF946}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

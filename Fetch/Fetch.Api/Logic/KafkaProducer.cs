@@ -2,7 +2,12 @@
 
 namespace Fetch.Api
 {
-    public class KafkaProducer
+    public interface IKafkaProducer
+    {
+        Task ProduceMessageAsync(string message);
+    }
+
+    public class KafkaProducer : IKafkaProducer
     {
         private const string KafkaBootstrapServers = "kafka:9092";
         private const string Topic = "requests";

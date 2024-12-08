@@ -11,8 +11,8 @@ builder.Services.AddSwaggerGen();
 
 //Services
 builder.Services.AddTransient<IRequestService, RequestService>();
-builder.Services.AddTransient<IRequestDAL, RequestDAL>();
-builder.Services.AddSingleton<KafkaProducer>();
+builder.Services.AddSingleton<IRequestDAL, RequestDAL>();
+builder.Services.AddSingleton<IKafkaProducer, KafkaProducer>();
 
 var app = builder.Build();
 
