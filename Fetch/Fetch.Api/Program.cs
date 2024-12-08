@@ -14,10 +14,27 @@ builder.Services.AddTransient<IRequestService, RequestService>();
 builder.Services.AddSingleton<IRequestDAL, RequestDAL>();
 builder.Services.AddSingleton<IKafkaProducer, KafkaProducer>();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowLocalhost",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:3000")
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+
+            policy.WithOrigins("http://localhost:8081")
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
+});
+
 var app = builder.Build();
 
 app.UseSwagger();
 app.UseSwaggerUI();
+
+app.UseCors("AllowLocalhost");
 
 app.UseHttpsRedirection();
 
