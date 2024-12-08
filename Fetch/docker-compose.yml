@@ -4,7 +4,9 @@ services:
       context: .
       dockerfile: Fetch.Api/Dockerfile
     ports:
-      - "8080:80" # Map port 80 in the container to port 8080 on the host
+      - "8080:80"
+    networks:
+      - fetch-network
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - POSTGRES_HOST=database
@@ -14,13 +16,53 @@ services:
       - ASPNETCORE_URLS=http://*:80/;
     depends_on:
       - database
+      - kafka
 
   database:
     image: postgres:15
     container_name: postgres
+    networks:
+      - fetch-network
     ports:
       - "5432:5432"
     environment:
       POSTGRES_DB: fetchdb
       POSTGRES_USER: fetchuser
       POSTGRES_PASSWORD: fetchpassword
+
+  kafka:
+    image: wurstmeister/kafka
+    environment:
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
+      - KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_BROKER_ID=1
+    ports:
+      - "9092:9092"
+    networks:
+      - fetch-network
+    depends_on:
+      - zookeeper
+
+  zookeeper:
+    image: wurstmeister/zookeeper:latest
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    networks:
+      - fetch-network
+
+  request-consumer:
+    build:
+      context: .
+      dockerfile: Fetch.Consumer/Dockerfile
+    depends_on:
+      - kafka
+      - fetch-api
+    networks:
+      - fetch-network
+    command: ["dotnet", "Fetch.Consumer.dll"]
+
+networks:
+  fetch-network:
+    driver: bridge
