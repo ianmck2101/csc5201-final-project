@@ -1,4 +1,8 @@
-﻿using Confluent.Kafka;
+﻿using System.Text.Json;
+using Confluent.Kafka;
+using Fetch.Consumer;
+using Fetch.Models.Data;
+using Fetch.Models.Events;
 public class MessageConsumer
 {
     private const string KafkaBootstrapServers = "localhost:9092";
@@ -6,11 +10,11 @@ public class MessageConsumer
     private const int MaxRetryAttempts = 3;
     private const int RetryDelaySeconds = 5;
 
-    private readonly MyDbContext _context;
+    private readonly IConsumerDAL _providerDal;
 
-    public MessageConsumer(MyDbContext context)
+    public MessageConsumer(IConsumerDAL providerDal)
     {
-        _context = context;
+        _providerDal = providerDal ?? throw new ArgumentNullException(nameof(providerDal));
     }
 
     public async Task StartListening(CancellationToken cancellationToken)
@@ -43,7 +47,7 @@ public class MessageConsumer
                             if (consumeResult != null)
                             {
                                 Console.WriteLine($"Received message: {consumeResult.Message.Value}");
-                                await ProcessMessage(consumeResult.Message.Value);
+                                await ProcessNewRequest(consumeResult.Message.Value);
                             }
                         }
                         catch (ConsumeException ex)
@@ -70,27 +74,42 @@ public class MessageConsumer
         }
     }
 
-    private async Task ProcessMessage(string message)
+    private async Task ProcessNewRequest(string message)
     {
         Console.WriteLine($"Processing message: {message}");
 
-        // Query the database for available providers
-        var providers = await _context.Providers.ToListAsync();
+        var newRequest = JsonSerializer.Deserialize<RequestCreated>(message);
+
+        if (newRequest == null)
+        {
+            Console.WriteLine(message + "was null. Skipping");
+            return;
+        }
+
+        var providers = await _providerDal.LoadAllProviders();
 
         // Assign the job to providers (e.g., send notifications, create bids, etc.)
         foreach (var provider in providers)
         {
-            // For example, send an email or trigger some action
             Console.WriteLine($"Assigning job to provider {provider.Name}");
-            await AssignJobToProvider(provider, message);
+            await AssignJobToProvider(provider, newRequest);
         }
     }
 
-    private async Task AssignJobToProvider(Provider provider, string message)
+    private async Task AssignJobToProvider(Provider provider, RequestCreated newRequest)
     {
-        // Logic to assign job to the provider (e.g., create a bid or send a notification)
-        Console.WriteLine($"Provider {provider.Name} is now bidding on the job: {message}");
-        // Simulate processing delay
-        await Task.Delay(1000);
+        if(provider.Categories?.Contains(newRequest.Category) ?? false)
+        {
+            var association = new ProviderRequestAssociation
+            {
+                Description = newRequest.Description,
+                Status = (byte)Status.Open,
+                ProviderId = provider.Id
+            };
+
+            await _providerDal.AddProviderRequestAssociation(association);
+
+            Console.WriteLine($"Provider {provider.Name} is now bidding on the job: {JsonSerializer.Serialize(newRequest)}");
+        }
     }
 }
