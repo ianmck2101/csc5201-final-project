@@ -3,6 +3,7 @@ using Fetch.Api;
 using Fetch.Api.DAL;
 using Fetch.Api.Data;
 using Fetch.Api.Logic;
+using Fetch.Api.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
@@ -61,6 +62,8 @@ app.UseSwaggerUI();
 app.UseCors("AllowLocalhost");
 
 app.UseHttpsRedirection();
+
+app.UseMiddleware<UsageMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();
