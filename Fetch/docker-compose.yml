@@ -3,7 +3,7 @@ services:
     build:
       context: ./Fetch.Ui
     ports:
-      - "8081:80"
+      - "8081:5000"
     networks:
       fetch-network:
         aliases:

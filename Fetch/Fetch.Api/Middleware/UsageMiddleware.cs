@@ -16,6 +16,18 @@ namespace Fetch.Api.Middleware
         {
             var startTime = DateTime.UtcNow;
 
+            if (context.Request.Method == "OPTIONS")
+            {
+                // Add CORS headers explicitly here, if needed
+                context.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+                context.Response.Headers.Append("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+                context.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+                // Return a 200 OK response to the OPTIONS request
+                context.Response.StatusCode = 200;
+                return;
+            }
+
             await _next(context);
 
             var elapsed = DateTime.UtcNow - startTime;

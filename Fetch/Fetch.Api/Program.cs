@@ -23,17 +23,13 @@ builder.Services.AddTransient<IUserService, UserService>();
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowLocalhost",
-        policy =>
-        {
-            policy.WithOrigins("http://localhost:3000")
-                  .AllowAnyHeader()
-                  .AllowAnyMethod();
-
-            policy.WithOrigins("http://localhost:8081")
-                  .AllowAnyHeader()
-                  .AllowAnyMethod();
-        });
+    options.AddPolicy("AllowAllOrigins", builder =>
+    {
+        builder
+            .AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader();
+    });
 });
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -53,13 +49,13 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 var app = builder.Build();
 
+app.UseCors("AllowAllOrigins");
+
 var requestDAL = app.Services.GetRequiredService<IRequestDAL>();
 requestDAL.EnsureTablesExist();
 
 app.UseSwagger();
 app.UseSwaggerUI();
-
-app.UseCors("AllowLocalhost");
 
 app.UseHttpsRedirection();
 
