@@ -16,8 +16,6 @@ public class MessageConsumer
     public MessageConsumer(IConsumerDAL consumerDal)
     {
         _consumerDal = consumerDal ?? throw new ArgumentNullException(nameof(consumerDal));
-
-        _consumerDal.EnsureTablesExist();
     }
 
     public async Task StartListening(CancellationToken cancellationToken)

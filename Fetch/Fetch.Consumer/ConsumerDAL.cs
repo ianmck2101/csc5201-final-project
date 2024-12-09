@@ -6,7 +6,6 @@ namespace Fetch.Consumer
 {
     public interface IConsumerDAL
     {
-        void EnsureTablesExist();
         Task<IEnumerable<Provider>> LoadAllProviders();
         Task<IEnumerable<ProviderRequestAssociation>> LoadRequestsForProvider(int providerId);
         Task AddProviderRequestAssociation(ProviderRequestAssociation association);
@@ -24,54 +23,12 @@ namespace Fetch.Consumer
             _connectionString = "Host=database;Database=fetchdb;Username=fetchuser;Password=fetchpassword";
         }
 
-        public void EnsureTablesExist()
-        {
-            using var connection = new NpgsqlConnection(_connectionString);
-            connection.Open();
-
-            // Ensure Providers table exists
-            var providersTableQuery = @"
-                CREATE TABLE IF NOT EXISTS providers (
-                    id SERIAL PRIMARY KEY,
-                    name VARCHAR(255) NOT NULL,
-                    email VARCHAR(255) NOT NULL,
-                    provider_categories INTEGER[] NOT NULL
-                );";
-
-            // Ensure ProviderRequestAssociations table exists
-            var providerRequestAssociationsTableQuery = @"
-                CREATE TABLE IF NOT EXISTS provider_request_associations (
-                    id SERIAL PRIMARY KEY,
-                    title TEXT NOT NULL, 
-                    description TEXT NOT NULL,
-                    status VARCHAR(50) NOT NULL DEFAULT 'open',
-                    request_id INT NOT NULL,
-                    provider_id INT REFERENCES providers(id) ON DELETE CASCADE
-                );";
-
-            using var providersCommand = new NpgsqlCommand(providersTableQuery, connection);
-            providersCommand.ExecuteNonQuery();
-
-            using var providerRequestAssociationsCommand = new NpgsqlCommand(providerRequestAssociationsTableQuery, connection);
-            providerRequestAssociationsCommand.ExecuteNonQuery();
-
-            var insertProvidersQuery = @"
-                INSERT INTO providers (name, email, provider_categories)
-                VALUES
-                    ('ProviderA', 'providera@example.com', ARRAY[0]),
-                    ('ProviderB', 'providerb@example.com', ARRAY[0, 1]),
-                    ('ProviderC', 'providerc@example.com', ARRAY[1])
-                ON CONFLICT DO NOTHING;";
-            using var insertCommand = new NpgsqlCommand(insertProvidersQuery, connection);
-            insertCommand.ExecuteNonQuery();
-        }
-
         public async Task<IEnumerable<Provider>> LoadAllProviders()
         {
             using var connection = new NpgsqlConnection(_connectionString);
             await connection.OpenAsync();
 
-            var query = "SELECT id, name, email, provider_categories FROM providers";
+            var query = "SELECT id, name, email, provider_categories, provider_contacts FROM providers";
             using var command = new NpgsqlCommand(query, connection);
 
             using var reader = await command.ExecuteReaderAsync();
@@ -82,12 +39,15 @@ namespace Fetch.Consumer
                 var categoriesArray = reader.GetFieldValue<int[]>(3);
                 var categories = categoriesArray.Select(c => (ServiceCategories)c).ToArray();
 
+                var providerContacts = reader.GetFieldValue<int[]>(4);
+
                 providers.Add(new Provider()
                 {
                     Id = reader.GetInt32(0),
                     Name = reader.GetString(1),
                     Email = reader.GetString(2),
-                    Categories = categories
+                    Categories = categories,
+                    ProviderContacts = providerContacts
                 });
             }
 

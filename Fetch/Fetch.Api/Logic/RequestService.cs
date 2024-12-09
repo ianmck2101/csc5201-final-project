@@ -13,6 +13,7 @@ namespace Fetch.Api.Logic
         IEnumerable<BaseRequest> GetAllRequests();
         bool AcceptRequest(int id, int providerId);
         bool CancelRequest(int id);
+        IEnumerable<ProviderRequestAssociation> GetAssociationsByProviderId(Provider provider);
     }
 
 
@@ -25,8 +26,6 @@ namespace Fetch.Api.Logic
         {
             _dal = requestDAL ?? throw new ArgumentNullException(nameof(requestDAL));
             _kafkaProducer = kafkaProducer ?? throw new ArgumentNullException(nameof(kafkaProducer));
-
-            _dal.EnsureTablesExist();
         }
 
         public void CreateNewRequest(BaseRequest request)
@@ -107,6 +106,13 @@ namespace Fetch.Api.Logic
             _kafkaProducer.ProduceRequestUpdatedMessageAsync(JsonSerializer.Serialize(updateRequestEvent));
 
             return true;
+        }
+
+        public IEnumerable<ProviderRequestAssociation> GetAssociationsByProviderId(Provider provider)
+        {
+            var associations = _dal.LoadAssociatonsByProviderId(provider.Id);
+
+            return associations;
         }
     }
 }

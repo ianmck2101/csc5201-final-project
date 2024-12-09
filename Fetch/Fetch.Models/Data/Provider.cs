@@ -6,5 +6,6 @@
         public string Name { get; set; }
         public string Email { get; set; }
         public IEnumerable<ServiceCategories> Categories { get; set; }
+        public IEnumerable<int> ProviderContacts { get; set; }
     }
 }
